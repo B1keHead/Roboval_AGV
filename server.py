@@ -2,11 +2,15 @@ import threading
 import queue
 
 from flask import Flask, render_template, request
-import serial
+
+try:
+    from serial import Serial, SerialException
+    arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=0)
+    connected_uart = True
+except (SerialException, NameError) as e:
+    connected_uart = False
 
 in_ = queue.Queue()
-out = queue.Queue()
-#arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=0)
 data = []
 app = Flask(__name__)
 
@@ -15,18 +19,11 @@ app = Flask(__name__)
 def handle_data():
     if request.method == 'POST':
         for field in request.form:
-            if field.startswith('send_'):
-                out.put(field.split("send_")[1])
+            if field.startswith('send_') and connected_uart:
+                arduino.write(bytes(field.split("send_")[1], 'ASCII'))
     while not in_.empty():
         data.insert(0, in_.get())
     return render_template('index.html', data=data)
-
-
-def serial_send():
-    while True:
-        if not out.empty():
-            arduino.write(bytes(out.get(), 'ASCII'))
-            out.task_done()
 
 
 def serial_read():
@@ -36,12 +33,11 @@ def serial_read():
 
 
 def main():
-    flask = threading.Thread(target=app.run, kwargs={'host': '0.0.0.0'})
-    sender = threading.Thread(target=serial_send)
+    flask = threading.Thread(target=app.run,
+                             kwargs={'host': '0.0.0.0', 'port':'80'})
     reader = threading.Thread(target=serial_read)
     flask.start()
-    sender.start()
-    reader.start()
+    if connected_uart: reader.start()
 
 if __name__ == "__main__":
     main()
