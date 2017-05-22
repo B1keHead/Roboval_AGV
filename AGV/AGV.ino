@@ -5,9 +5,9 @@ const unsigned long autoStopDelta = 700;
 const uint8_t autoStopPollInterval = autoStopDelta - 100;
 const uint8_t autoModeInterval = 1000;  //todo put time needed to do action
 
-const uint8_t motorPin1 = 5;
-const uint8_t motorPin2 = 3;
-const uint8_t directionMotor1 = 4;
+const uint8_t motorPin1 = 3;
+const uint8_t motorPin2 = 5;
+const uint8_t directionMotor1 = 2;
 const uint8_t directionMotor2 = 4;
 
 const uint8_t sonarTrigger = A0;
@@ -26,7 +26,6 @@ boolean turning;
 
 void setup(){
   Serial.begin(9600);
-  //todo put time needed to do action
   autoStopTimer.setInterval(autoStopPollInterval, autoStop);
   autoModeTimer.setInterval(autoModeInterval, autoMode);
 
@@ -110,9 +109,9 @@ void accelerate(){
   if(!moving){
     Serial.print("Starting to move... ");
     
-    for(int s; s < 255; s++){
+    for(int s = 0; s < 255; s++){
       analogWrite(motorPin1, s);
-      analogWrite(motorPin1, s);
+      analogWrite(motorPin2, s);
       delay(motorStepTime);
     }
     moving = true;
@@ -127,9 +126,9 @@ void turn(){
   if(!turning){
     Serial.print("Starting to turn... ");
     
-    for(int s; s < 50; s++){
+    for(int s = 0; s < 100; s++){
       analogWrite(motorPin1, s);
-      analogWrite(motorPin1, s);
+      analogWrite(motorPin2, s);
       delay(1);
     }
     turning = true;
@@ -142,32 +141,32 @@ void turn(){
 
 void decelerate(){  
   Serial.print("Stopping... ");
-
-  digitalWrite(directionMotor1, LOW);
-  digitalWrite(directionMotor2, LOW);
   
   for(int s = 254; s >= 0; s--){
     analogWrite(motorPin1, s);
-    analogWrite(motorPin1, s);
+    analogWrite(motorPin2, s);
     delay(motorStepTime);
   }
   moving = false;
+
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, LOW);
 
   Serial.println("Stopped!");
 }
 
 void stopTurning(){
   Serial.print("Stopping turn... ");
-
-  digitalWrite(directionMotor1, LOW);
-  digitalWrite(directionMotor2, LOW);
   
-  for(int s = 49; s >= 0; s--){
+  for(int s = 99; s >= 0; s--){
     analogWrite(motorPin1, s);
-    analogWrite(motorPin1, s);
+    analogWrite(motorPin2, s);
     delay(1);
   }
   turning = false;
+
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, LOW);
   
   Serial.println("Stopped turning!");
 }
