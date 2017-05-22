@@ -66,6 +66,8 @@
 			}
 			
 		</style>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	  
 	  	<title>Controlli AGV</title>
 
@@ -77,22 +79,39 @@
 				<table>
 					<tbody>
 						<tr>
-							<td colspan="3"><input type="submit" name="send_A" value="Auto ON/OFF" id="auto"></td>
+							<td colspan="3"><input type="button" name="send_A" value="Auto ON/OFF" id="auto" onclick="cmd = 'A';toggleInterval()"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="submit" name="send_F" value="ʌ" class="singleCol"></td>
+							<td colspan="3"><input type="button" name="send_F" value="ʌ" class="singleCol" onclick="cmd = 'F';toggleInterval()"></td>
 						</tr>
 						<tr>
-							<td><input type="submit" name="send_L" value="<" class="centralRow"></td>
-							<td><input type="submit" name="send_S" value="Stop" id="stop"></td>
-							<td><input type="submit" name="send_R" value=">" class="centralRow"></td>
+							<td><input type="button" name="send_L" value="<" class="centralRow" onclick="cmd = 'L';toggleInterval()"></td>
+							<td></td>
+							<td><input type="button" name="send_R" value=">" class="centralRow" onclick="cmd = 'R';toggleInterval()"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="submit" name="send_B" value="v" class="singleCol"></td>
+							<td colspan="3"><input type="button" name="send_B" value="v" class="singleCol" onclick="cmd = 'B';toggleInterval()"></td>
 						</tr>
 					</tbody>
 				</table >
 			</form>
 		</center>
+		<script>
+			var cmd = "";
+
+			function sendCmd() {
+				$.post("/", {cmd: cmd});
+			}
+
+			var intervalId;
+			function toggleInterval() {
+  				if (!intervalId) {
+    					intervalId = setInterval(sendCmd, 600);
+  				} else {
+    					clearInterval(intervalId);
+    					intervalId = null;
+  				}
+			}
+		</script>
 	</body>
 </html>

@@ -8,9 +8,7 @@ app = Flask(__name__)
 @app.route('/', methods=['POST', 'GET'])
 def handle_data():
     if request.method == 'POST':
-        for field in request.form:
-            if field.startswith('send_'):
-                print("RECEIVED FROM WEBPAGE:", field.split("send_")[1])
+        print("RECEIVED FROM WEBPAGE:", request.form['cmd'])
     return render_template('index.html')
 
 

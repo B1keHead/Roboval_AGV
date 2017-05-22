@@ -4,11 +4,12 @@ import queue
 from flask import Flask, render_template, request
 
 try:
-    from serial import Serial, SerialException
+    import serial
     arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=0)
     connected_uart = True
-except (SerialException, NameError) as e:
+except (serial.SerialException, NameError) as e:
     connected_uart = False
+    print(e)
 
 in_ = queue.Queue()
 data = []
@@ -17,10 +18,9 @@ app = Flask(__name__)
 
 @app.route('/', methods=['POST', 'GET'])
 def handle_data():
-    if request.method == 'POST':
-        for field in request.form:
-            if field.startswith('send_') and connected_uart:
-                arduino.write(bytes(field.split("send_")[1], 'ASCII'))
+    if request.method == 'POST' and connected_uart:
+        arduino.write(bytes(request.form["cmd"], 'ASCII'))
+        print("sent")
     while not in_.empty():
         data.insert(0, in_.get())
     return render_template('index.html', data=data)
