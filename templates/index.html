@@ -1,35 +1,117 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  </head>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=0.95 maximum-scale=0.95, user-scalable=0">
+		
+		<style>
+			body {
+				background-color: #262626;
+		  		font-family: arial;
+			}
 
-  <body>
-    <form  action="/" method="post">
+			table {
+				background-color: #33cccc;
+				border-radius: 5px;
+				width: 422.4px;
+				height: 499.2px;
+			}
 
-<table >
-	<tbody>
-		<tr>
-			<td><p><input type="submit" name="send_A" value="Auto ON/OFF"> </p></td>
-			<td></td>
-			<td><p><input type="submit" name="send_S" value="Ferma"> </p></td>
-		</tr>
-		<tr>
-			<td> </td>
-			<td><p><input type="submit" name="send_F" value="Avanti"> </p></td>
-			<td> </td>
-		</tr>
-		<tr>
-			<td><p><input type="submit" name="send_R" value="Destra"> </p></td>
-			<td> </td>
-			<td><p><input type="submit" name="send_L" value="Sinistra"> </p></td>
-		</tr>
-		<tr>
-			<td> </td>
-			<td><p><input type="submit" name="send_B" value="Indietro"> </p></td>
-			<td> </td>
-		</tr>
-	</tbody>
-</table >
-    </form>
-  </body>
+			input {
+				margin: 10px;
+				cursor: pointer;
+			}
+
+			input:focus {
+				outline: 0px !important;
+			}
+
+			#stop {
+				height: 120px;
+				width: 120px;
+				border-radius: 50%;
+				border: 2px solid #ff5050;
+				background-color: #ff5050;
+				font-weight: bold;
+				font-size: 40px;
+				color: white;
+			}
+
+			#auto {
+				background-color: #33cccc;
+				color: white;
+				border: 2px solid #33cccc;
+				font-size: 40px;
+			}
+
+			.singleCol {
+				margin:auto;
+  				display:block;
+				background-color: #33cccc;
+				color: white;
+				border: 2px solid #33cccc;
+				font-size: 80px;
+				font-weight: bold;
+			}
+
+			.centralRow {
+				background-color: #33cccc;
+				color: white;
+				border: 2px solid #33cccc;
+				font-size: 80px;
+				font-weight: bold;
+			}
+
+			td {
+				text-align: center;
+			}
+			
+		</style>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	  
+	  	<title>Controlli AGV</title>
+
+	</head>
+	  
+	<body>
+		<center>
+			<form  action="/" method="post">
+				<table>
+					<tbody>
+						<tr>
+							<td colspan="3"><input type="button" name="send_A" value="Auto ON/OFF" id="auto" onclick="cmd = 'A';toggleInterval()"></td>
+						</tr>
+						<tr>
+							<td colspan="3"><input type="button" name="send_F" value="ʌ" class="singleCol" onclick="cmd = 'F';toggleInterval()"></td>
+						</tr>
+						<tr>
+							<td><input type="button" name="send_L" value="<" class="centralRow" onclick="cmd = 'L';toggleInterval()"></td>
+							<td></td>
+							<td><input type="button" name="send_R" value=">" class="centralRow" onclick="cmd = 'R';toggleInterval()"></td>
+						</tr>
+						<tr>
+							<td colspan="3"><input type="button" name="send_B" value="v" class="singleCol" onclick="cmd = 'B';toggleInterval()"></td>
+						</tr>
+					</tbody>
+				</table >
+			</form>
+		</center>
+		<script>
+			var cmd = "";
+
+			function sendCmd() {
+				$.post("/", {cmd: cmd});
+			}
+
+			var intervalId;
+			function toggleInterval() {
+  				if (!intervalId) {
+    					intervalId = setInterval(sendCmd, 600);
+  				} else {
+    					clearInterval(intervalId);
+    					intervalId = null;
+  				}
+			}
+		</script>
+	</body>
 </html>

@@ -1,229 +1,189 @@
-//LIBRERIE
-#include <Servo.h>
-Servo servo1;
+#include <SimpleTimer.h>
 
-//VARIABILI
-const int dirM1Apin = 4;
-const int dirM2Apin = 2;
-const int pwmM1Apin = 5;
-const int pwmM2Apin = 3;
+const uint8_t motorStepTime = 2;
+const unsigned long autoStopDelta = 700;
+const uint8_t autoStopPollInterval = autoStopDelta - 100;
+const uint8_t autoModeInterval = 1000;  //todo put time needed to do action
 
-const int triggerPort1 = A0;
-const int echoPort1 = A1;
+const uint8_t motorPin1 = 3;
+const uint8_t motorPin2 = 5;
+const uint8_t directionMotor1 = 2;
+const uint8_t directionMotor2 = 4;
 
-const int buzzerPin = 6;
+const uint8_t sonarTrigger = A0;
+const uint8_t sonarEcho = A1;
 
-char com;
+boolean autoModeEnabled;
+SimpleTimer autoModeTimer;
 
-long distanzadx;
-long distanzasx;
+unsigned long lastCmdAt;
+char lastCmd;
 
-boolean automatica = false;
-int s;
+SimpleTimer autoStopTimer;
 
-//FUNZIONI
-void rampa_start(){
-  for(s = 0; s < 255; s += 1)
-  {
-    digitalWrite(dirM1Apin, LOW);
-    digitalWrite(dirM2Apin, LOW);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(3);
+boolean moving;
+boolean turning;
+
+void setup(){
+  Serial.begin(9600);
+  autoStopTimer.setInterval(autoStopPollInterval, autoStop);
+  autoModeTimer.setInterval(autoModeInterval, autoMode);
+
+  pinMode(motorPin1, OUTPUT);
+  pinMode(motorPin2, OUTPUT);
+  pinMode(directionMotor1, OUTPUT);
+  pinMode(directionMotor2, OUTPUT);
+
+  pinMode(sonarTrigger, OUTPUT);
+  pinMode(sonarEcho, INPUT);
+}
+
+void loop(){
+  if(!autoModeEnabled){
+    autoStopTimer.run();
   }
-}
-void rampa_stop(){
-  for(s = 255; s >= 0; s -= 1)
-  {
-    digitalWrite(dirM1Apin, LOW);
-    digitalWrite(dirM2Apin, LOW);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(2);
-  }
-}
-void rampa_entrata_curvaSX(){
-  for(s = 255; s >= 127; s -= 1)
-  {
-    digitalWrite(dirM1Apin, HIGH);
-    digitalWrite(dirM2Apin, LOW);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(2);
-  }
-}
-void rampa_in_curvaSX(){
-    digitalWrite(dirM1Apin, HIGH);
-    digitalWrite(dirM2Apin, LOW);
-    analogWrite(pwmM1Apin, 127);
-    analogWrite(pwmM2Apin, 127); 
-    delay(2);
-}
-void rampa_uscita_curvaSX(){
-  for(s = 127; s < 255; s += 1)
-  {
-    digitalWrite(dirM1Apin, HIGH);
-    digitalWrite(dirM2Apin, LOW);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(3);
-  }
-}
-void rampa_entrata_curvaDX(){
-  for(s = 255; s >= 127; s -= 1)
-  {
-    digitalWrite(dirM1Apin, LOW);
-    digitalWrite(dirM2Apin, HIGH);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(2);
-  }
-}
-void rampa_in_curvaDX(){
-    digitalWrite(dirM1Apin, LOW);
-    digitalWrite(dirM2Apin, HIGH);
-    analogWrite(pwmM1Apin, 127);
-    analogWrite(pwmM2Apin, 127); 
-    delay(2);
-}
-void rampa_uscita_curvaDX(){
-  for(s = 127; s < 255; s += 1)
-  {
-    digitalWrite(dirM1Apin, LOW);
-    digitalWrite(dirM2Apin, HIGH);
-    analogWrite(pwmM1Apin, s);
-    analogWrite(pwmM2Apin, s); 
-    delay(3);
-  }
-}
-void avanti(){
-  rampa_start();
-  analogWrite(pwmM1Apin, 255);
-  analogWrite(pwmM2Apin, 255); 
-}
-void avanti_automatica(){
-   digitalWrite(dirM1Apin, LOW);
-   digitalWrite(dirM2Apin, LOW);
-   analogWrite(pwmM1Apin, 255);
-   analogWrite(pwmM2Apin, 255);    
+  autoModeTimer.run();
 }
 
-void indietro(){
-  digitalWrite(dirM1Apin, HIGH);
-  digitalWrite(dirM2Apin, HIGH);
-  analogWrite(pwmM1Apin, 255);
-  analogWrite(pwmM2Apin, 255);
-}
-void destra(){
-  rampa_entrata_curvaDX();
-  rampa_in_curvaDX();
-  rampa_uscita_curvaDX();
-}
-void sinistra(){
-  rampa_entrata_curvaSX();
-  rampa_in_curvaSX();
-  rampa_uscita_curvaSX();
-}
-void fermo(){
-  rampa_stop();
-  analogWrite(pwmM1Apin, 0);
-  analogWrite(pwmM2Apin, 0);
-}
-long sonar1(){
-  digitalWrite(triggerPort1, LOW);
-  digitalWrite(triggerPort1, HIGH);
-  delay(10);
-  digitalWrite(triggerPort1, LOW);
-  long durata = pulseIn(echoPort1, HIGH);
-  long distanza = 0.034 * durata / 2;
-  return distanza;
-}
+void serialEvent(){
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if(inChar == 'A') autoModeEnabled = !autoModeEnabled;
 
-void getCommand(){
-  
-  if(Serial.available()) {
-    char com = Serial.read();
-    if(com == 'F') avanti();
-    if(com == 'B') indietro();
-    if(com == 'R') destra();
-    if(com == 'L') sinistra();
-    if(com == 'S') fermo();
-    if(com == 'A'){
-      automatica = !automatica;
-      if(automatica == true){
-        fermo();
-        delay(1000);
+    if(!autoModeEnabled){
+      lastCmdAt = millis();
+
+      if(lastCmd != inChar){
+        if(moving){
+          decelerate();
+        }else if(turning){
+          stopTurning();
+        }
       }
+      
+      switch(inChar){
+        case 'F':
+          fwd();
+          break;
+        case 'B':
+          bwd();
+          break;
+        case 'R':
+          rx();
+          break;
+        case 'L':
+          lx();
+          break;
+      }
+
+      lastCmd = inChar;
     }
   }
 }
 
-void setup() {
-  Serial.begin(9600);
+void fwd(){
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, LOW);
+  accelerate();
+}
+
+void bwd(){
+  digitalWrite(directionMotor1, HIGH);
+  digitalWrite(directionMotor2, HIGH);
+  accelerate();
+}
+
+void rx(){
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, HIGH);
+  turn();
+}
+
+void lx(){
+  digitalWrite(directionMotor1, HIGH);
+  digitalWrite(directionMotor2, LOW);
+  turn();
+}
+
+void accelerate(){  
+  if(!moving){
+    Serial.print("Starting to move... ");
+    
+    for(int s = 0; s < 255; s++){
+      analogWrite(motorPin1, s);
+      analogWrite(motorPin2, s);
+      delay(motorStepTime);
+    }
+    moving = true;
+
+    Serial.println("Done!");
+  }else{
+    Serial.println("Already moving.");
+  }
+}
+
+void turn(){
+  if(!turning){
+    Serial.print("Starting to turn... ");
+    
+    for(int s = 0; s < 100; s++){
+      analogWrite(motorPin1, s);
+      analogWrite(motorPin2, s);
+      delay(1);
+    }
+    turning = true;
+
+    Serial.println("Done!");
+  }else{
+    Serial.println("Already turning.");
+  }
+}
+
+void decelerate(){  
+  Serial.print("Stopping... ");
   
-  pinMode(dirM1Apin, OUTPUT);
-  pinMode(dirM2Apin, OUTPUT);
-  pinMode(pwmM1Apin, OUTPUT);
-  pinMode(pwmM2Apin, OUTPUT);
+  for(int s = 254; s >= 0; s--){
+    analogWrite(motorPin1, s);
+    analogWrite(motorPin2, s);
+    delay(motorStepTime);
+  }
+  moving = false;
 
-  pinMode(triggerPort1, OUTPUT);
-  pinMode(echoPort1, INPUT);
-  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, LOW);
 
-  fermo();
-
-  servo1.attach(10);
-  servo1.write(109);
+  Serial.println("Stopped!");
 }
 
+void stopTurning(){
+  Serial.print("Stopping turn... ");
+  
+  for(int s = 99; s >= 0; s--){
+    analogWrite(motorPin1, s);
+    analogWrite(motorPin2, s);
+    delay(1);
+  }
+  turning = false;
 
-void loop(){
-
-  getCommand();
-
- if(automatica == true){
-
-    servo1.write(109);
-
-    if(sonar1() < 70){
-      fermo();
-      
-      delay(400);
-      servo1.write(10);
-      delay(400);
-
-      distanzadx = sonar1();
-
-      delay(50);
-      servo1.write(160);
-      delay(600);
-
-      distanzasx = sonar1();
-      
-      delay(50);
-      servo1.write(100);
-      delay(400);
-
-      if(distanzadx > distanzasx){
-        indietro();
-        delay(300);
-        destra();
-        delay(400);
-        fermo();
-      }
-      
-      else{
-         indietro();
-        delay(300);
-        sinistra();
-        delay(400);
-        fermo();
-      }
-   }
-
-   else
-    avanti_automatica();
-  } 
-
-  delay(1);
+  digitalWrite(directionMotor1, LOW);
+  digitalWrite(directionMotor2, LOW);
+  
+  Serial.println("Stopped turning!");
 }
+
+void autoStop(){
+  if(millis() - lastCmdAt > autoStopDelta){
+    if(moving){
+      decelerate();
+    }else if(turning){
+      stopTurning();
+    }
+  }
+}
+
+void autoMode(){
+  if(autoModeEnabled){
+    Serial.println("I'm doing automatic stuff");
+  }
+}
+
