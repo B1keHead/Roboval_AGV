@@ -1,43 +1,53 @@
 import threading
-import queue
 
 from flask import Flask, render_template, request
+import serial
+import serial.tools.list_ports
 
-try:
-    import serial
-    arduino = serial.Serial('/dev/ttyUSB0', 9600, timeout=0)
-    connected_uart = True
-except (serial.SerialException, NameError) as e:
-    connected_uart = False
-    print(e)
-
-in_ = queue.Queue()
-data = []
 app = Flask(__name__)
+arduino = None
+connected = False
+
+
+def auto_reconnect():
+    global arduino
+    global connected
+    if not connected:
+        if arduino:
+            arduino.close()
+        arduino = connect_arduino()
+        connected = bool(arduino)
+        print("Attempted connection, success:", connected)
+    threading.Timer(10, auto_reconnect).start()
+
+
+def connect_arduino():
+    ports = [obj.device for obj in serial.tools.list_ports.comports() if "Arduino" in obj.manufacturer]
+    if not ports:
+        return
+    try:
+        return serial.Serial(ports[0])
+    except serial.SerialException:
+        return
 
 
 @app.route('/', methods=['POST', 'GET'])
 def handle_data():
-    if request.method == 'POST' and connected_uart:
-        arduino.write(bytes(request.form["cmd"], 'ASCII'))
-        print("sent")
-    while not in_.empty():
-        data.insert(0, in_.get())
-    return render_template('index.html', data=data)
-
-
-def serial_read():
-    while True:
-        if arduino.inWaiting():
-                in_.put(str(arduino.readline(), 'ASCII'))
+    if request.method == 'POST':
+        if connected:
+            try:
+                arduino.write(bytes(request.form["cmd"], 'ASCII'))
+                arduino.flush()
+            except serial.SerialException:
+                global connected
+                connected = False
+            print("sent")
+    return render_template('index.html')
 
 
 def main():
-    flask = threading.Thread(target=app.run,
-                             kwargs={'host': '0.0.0.0', 'port':'80'})
-    reader = threading.Thread(target=serial_read)
-    flask.start()
-    if connected_uart: reader.start()
+    auto_reconnect()
+    app.run(host='0.0.0.0', port='80')
 
 if __name__ == "__main__":
     main()
