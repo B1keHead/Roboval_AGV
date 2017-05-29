@@ -79,18 +79,18 @@
 				<table>
 					<tbody>
 						<tr>
-							<td colspan="3"><input type="button" name="send_A" value="Auto ON/OFF" id="auto" onclick="cmd = 'A';toggleInterval()"></td>
+							<td colspan="3"><input type="button" value="Auto ON/OFF" id="auto" onclick=""></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" name="send_F" value="ʌ" class="singleCol" onclick="cmd = 'F';toggleInterval()"></td>
+							<td colspan="3"><input type="button" value="ʌ" class="singleCol" onclick="test('F')"></td>
 						</tr>
 						<tr>
-							<td><input type="button" name="send_L" value="<" class="centralRow" onclick="cmd = 'L';toggleInterval()"></td>
+							<td><input type="button" value="<" class="centralRow" onclick="test('L')"></td>
 							<td></td>
-							<td><input type="button" name="send_R" value=">" class="centralRow" onclick="cmd = 'R';toggleInterval()"></td>
+							<td><input type="button" value=">" class="centralRow" onclick="test('R')"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" name="send_B" value="v" class="singleCol" onclick="cmd = 'B';toggleInterval()"></td>
+							<td colspan="3"><input type="button" value="v" class="singleCol" onclick="test('B')"></td>
 						</tr>
 					</tbody>
 				</table >
@@ -98,6 +98,14 @@
 		</center>
 		<script>
 			var cmd = "";
+
+			function test(c){
+				if (c != cmd) {
+					toggleInterval();
+				}
+				cmd = c;
+				toggleInterval()
+			}
 
 			function sendCmd() {
 				$.post("/", {cmd: cmd});
