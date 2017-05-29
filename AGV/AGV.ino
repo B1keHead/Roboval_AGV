@@ -1,8 +1,7 @@
 #include <SimpleTimer.h>
 
-const uint8_t motorStepTime = 2;
-const unsigned long autoStopDelta = 700;
-const uint8_t autoStopPollInterval = autoStopDelta - 100;
+const uint8_t motorStepTime = 4;
+const uint8_t motorStepTurningTime = 3;
 const uint8_t autoModeInterval = 1000;  //todo put time needed to do action
 
 const uint8_t motorPin1 = 3;
@@ -19,14 +18,11 @@ SimpleTimer autoModeTimer;
 unsigned long lastCmdAt;
 char lastCmd;
 
-SimpleTimer autoStopTimer;
-
 boolean moving;
 boolean turning;
 
 void setup(){
   Serial.begin(9600);
-  autoStopTimer.setInterval(autoStopPollInterval, autoStop);
   autoModeTimer.setInterval(autoModeInterval, autoMode);
 
   pinMode(motorPin1, OUTPUT);
@@ -39,20 +35,16 @@ void setup(){
 }
 
 void loop(){
-  if(!autoModeEnabled){
-    autoStopTimer.run();
-  }
   autoModeTimer.run();
 }
 
 void serialEvent(){
   while (Serial.available()) {
     char inChar = (char)Serial.read();
+    Serial.write(6);
     if(inChar == 'A') autoModeEnabled = !autoModeEnabled;
 
     if(!autoModeEnabled){
-      lastCmdAt = millis();
-
       if(lastCmd != inChar){
         if(moving){
           decelerate();
@@ -73,6 +65,13 @@ void serialEvent(){
           break;
         case 'L':
           lx();
+          break;
+        case 'S':
+          if(moving){
+            decelerate();
+          }else if(turning){
+            stopTurning();
+          }
           break;
       }
 
@@ -107,7 +106,7 @@ void lx(){
 
 void accelerate(){  
   if(!moving){
-    Serial.print("Starting to move... ");
+    //Serial.print("Starting to move... ");
     
     for(int s = 0; s < 255; s++){
       analogWrite(motorPin1, s);
@@ -116,31 +115,31 @@ void accelerate(){
     }
     moving = true;
 
-    Serial.println("Done!");
+    //Serial.println("Done!");
   }else{
-    Serial.println("Already moving.");
+    //Serial.println("Already moving.");
   }
 }
 
 void turn(){
   if(!turning){
-    Serial.print("Starting to turn... ");
+    //Serial.print("Starting to turn... ");
     
     for(int s = 0; s < 100; s++){
       analogWrite(motorPin1, s);
       analogWrite(motorPin2, s);
-      delay(1);
+      delay(motorStepTurningTime);
     }
     turning = true;
 
-    Serial.println("Done!");
+    //Serial.println("Done!");
   }else{
-    Serial.println("Already turning.");
+    //Serial.println("Already turning.");
   }
 }
 
 void decelerate(){  
-  Serial.print("Stopping... ");
+  //Serial.print("Stopping... ");
   
   for(int s = 254; s >= 0; s--){
     analogWrite(motorPin1, s);
@@ -152,38 +151,28 @@ void decelerate(){
   digitalWrite(directionMotor1, LOW);
   digitalWrite(directionMotor2, LOW);
 
-  Serial.println("Stopped!");
+  //Serial.println("Stopped!");
 }
 
 void stopTurning(){
-  Serial.print("Stopping turn... ");
+  //Serial.print("Stopping turn... ");
   
   for(int s = 99; s >= 0; s--){
     analogWrite(motorPin1, s);
     analogWrite(motorPin2, s);
-    delay(1);
+    delay(motorStepTurningTime);
   }
   turning = false;
 
   digitalWrite(directionMotor1, LOW);
   digitalWrite(directionMotor2, LOW);
   
-  Serial.println("Stopped turning!");
-}
-
-void autoStop(){
-  if(millis() - lastCmdAt > autoStopDelta){
-    if(moving){
-      decelerate();
-    }else if(turning){
-      stopTurning();
-    }
-  }
+  //Serial.println("Stopped turning!");
 }
 
 void autoMode(){
   if(autoModeEnabled){
-    Serial.println("I'm doing automatic stuff");
+    //Serial.println("I'm doing automatic stuff");
   }
 }
 

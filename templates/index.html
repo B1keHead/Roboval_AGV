@@ -2,7 +2,6 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=0.95 maximum-scale=0.95, user-scalable=0">
-		
 		<style>
 			body {
 				background-color: #262626;
@@ -66,59 +65,35 @@
 			}
 			
 		</style>
-
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	  
 	  	<title>Controlli AGV</title>
-
 	</head>
-	  
 	<body>
 		<center>
 			<form  action="/" method="post">
 				<table>
 					<tbody>
 						<tr>
-							<td colspan="3"><input type="button" value="Auto ON/OFF" id="auto" onclick=""></td>
+							<td colspan="3"><input type="button" value="Auto ON/OFF" id="auto" onclick="sendCmd('A');"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" value="ʌ" class="singleCol" onclick="test('F')"></td>
+							<td colspan="3"><input type="button" value="ʌ" class="singleCol" onclick="sendCmd('F')"></td>
 						</tr>
 						<tr>
-							<td><input type="button" value="<" class="centralRow" onclick="test('L')"></td>
-							<td></td>
-							<td><input type="button" value=">" class="centralRow" onclick="test('R')"></td>
+							<td><input type="button" value="<" class="centralRow" onclick="sendCmd('L')"></td>
+							<td><input type="button" value="Stop" id="stop" onclick="sendCmd('S')"></td>
+							<td><input type="button" value=">" class="centralRow" onclick="sendCmd('R')"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" value="v" class="singleCol" onclick="test('B')"></td>
+							<td colspan="3"><input type="button" value="v" class="singleCol" onclick="sendCmd('B')"></td>
 						</tr>
 					</tbody>
 				</table >
 			</form>
 		</center>
 		<script>
-			var cmd = "";
-
-			function test(c){
-				if (c != cmd) {
-					toggleInterval();
-				}
-				cmd = c;
-				toggleInterval()
-			}
-
-			function sendCmd() {
+			function sendCmd(cmd) {
 				$.post("/", {cmd: cmd});
-			}
-
-			var intervalId;
-			function toggleInterval() {
-  				if (!intervalId) {
-    					intervalId = setInterval(sendCmd, 600);
-  				} else {
-    					clearInterval(intervalId);
-    					intervalId = null;
-  				}
 			}
 		</script>
 	</body>
