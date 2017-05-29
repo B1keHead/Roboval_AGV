@@ -74,18 +74,18 @@
 				<table>
 					<tbody>
 						<tr>
-							<td colspan="3"><input type="button" value="Auto ON/OFF" id="auto" onclick="sendCmd('A');"></td>
+							<td colspan="3"><input type="button" value="Auto ON/OFF" id="auto" onmousedown="sendCmd('A')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('A')" ontouchend="sendCmd('S')"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" value="ʌ" class="singleCol" onclick="sendCmd('F')"></td>
+							<td colspan="3"><input type="button" value="ʌ" class="singleCol" onmousedown="sendCmd('F')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('F')" ontouchend="sendCmd('S')"></td>
 						</tr>
 						<tr>
-							<td><input type="button" value="<" class="centralRow" onclick="sendCmd('L')"></td>
+							<td><input type="button" value="<" class="centralRow" onmousedown="sendCmd('L')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('L')" ontouchend="sendCmd('S')"></td>
 							<td><input type="button" value="Stop" id="stop" onclick="sendCmd('S')"></td>
-							<td><input type="button" value=">" class="centralRow" onclick="sendCmd('R')"></td>
+							<td><input type="button" value=">" class="centralRow" onmousedown="sendCmd('R')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('R')" ontouchend="sendCmd('S')"></td>
 						</tr>
 						<tr>
-							<td colspan="3"><input type="button" value="v" class="singleCol" onclick="sendCmd('B')"></td>
+							<td colspan="3"><input type="button" value="v" class="singleCol" onmousedown="sendCmd('B')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('B')" ontouchend="sendCmd('S')"></td>
 						</tr>
 					</tbody>
 				</table >
@@ -93,7 +93,7 @@
 		</center>
 		<script>
 			function sendCmd(cmd) {
-				$.post("/", {cmd: cmd});
+				$.post("/", {cmd: cmd})
 			}
 		</script>
 	</body>
