@@ -25,7 +25,7 @@ def auto_reconnect():
 
 def connect_arduino():
     ports = [obj.device for obj in serial.tools.list_ports.comports()
-             if "Arduino" in obj.description]
+             if "Arduino" in obj.manufacturer]
     if not ports:
         return
     try:
