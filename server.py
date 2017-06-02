@@ -23,9 +23,16 @@ def auto_reconnect():
     arduino or threading.Timer(5, auto_reconnect).start()
 
 
+def port_ck_compat(obj):
+    if isinstance(obj, tuple):
+        return obj[0]
+    if "Arduino" in obj.manufacturer:
+        return obj.device
+
+
 def connect_arduino():
-    ports = [obj.device for obj in serial.tools.list_ports.comports()
-             if "Arduino" in obj.manufacturer]
+    ports = [port_ck_compat(obj) for obj in serial.tools.list_ports.comports()
+             if port_ck_compat(obj)]
     if not ports:
         return
     try:
